@@ -85,55 +85,68 @@ const createWindow = async () => {
     },
   });
 
-  let isAuthSuccess = false;
-  let data: any;
-  try {
-    data = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-    isAuthSuccess = await AuthValidate(data.key);
-  } catch (error: any) {
-    if (mainWindow !== null) {
-      mainWindow.webContents.send(
-        'ipc-example',
-        "config.json doesn't exist or invalid key"
-      );
-      mainWindow.webContents.send('ipc-example', error.message);
-    }
-  }
+  mainWindow.loadURL(resolveHtmlPath('index.html'));
 
-  let isTasksLoadSuccess = false;
-  const tasks: Task[] = [];
-  try {
-    const db = fs.readFileSync('tasks.csv', 'utf8');
-    const records = parse(db);
-    records.forEach((record: any) => {
-      if (record !== records[0]) {
-        const task: Task = {
-          monitor_channel: record[0],
-          destination_channel: record[1],
-          mention: record[2],
-          webhook_url: record[3],
-          webhook_user_name: record[4],
-          webhook_avatar_url: record[5],
-          positive_keywords_type: record[6],
-          positive_keywords: record[7],
-          negative_keywords_type: record[8],
-          negative_keywords: record[9],
-        };
-        tasks.push(task);
+  mainWindow.on('ready-to-show', async () => {
+    if (!mainWindow) {
+      throw new Error('"mainWindow" is not defined');
+    }
+    if (process.env.START_MINIMIZED) {
+      mainWindow.minimize();
+    } else {
+      mainWindow.show();
+    }
+
+    let data: any;
+    try {
+      console.log('auth start');
+      data = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+      console.log('auth process');
+      await AuthValidate(data.key);
+    } catch (error: any) {
+      if (mainWindow !== null) {
+        console.log(error.message);
+        mainWindow.webContents.send(
+          'ipc-example',
+          "config.json doesn't exist or invalid key"
+        );
+        mainWindow.webContents.send('ipc-example', error.message);
       }
-    });
-    isTasksLoadSuccess = true;
-  } catch (error: any) {
-    if (mainWindow !== null) {
-      mainWindow.webContents.send(
-        'ipc-example',
-        "tasks.csv doesn't exist or invalid format"
-      );
-      mainWindow.webContents.send('ipc-example', error.message);
+      return;
     }
-  }
 
-  if (isAuthSuccess && isTasksLoadSuccess) {
+    const tasks: Task[] = [];
+    try {
+      const db = fs.readFileSync('tasks.csv', 'utf8');
+      const records = parse(db);
+      records.forEach((record: any) => {
+        if (record !== records[0]) {
+          const task: Task = {
+            monitor_channel: record[0],
+            destination_channel: record[1],
+            mention: record[2],
+            webhook_url: record[3],
+            webhook_user_name: record[4],
+            webhook_avatar_url: record[5],
+            positive_keywords_type: record[6],
+            positive_keywords: record[7],
+            negative_keywords_type: record[8],
+            negative_keywords: record[9],
+          };
+          tasks.push(task);
+        }
+      });
+    } catch (error: any) {
+      if (mainWindow !== null) {
+        mainWindow.webContents.send(
+          'ipc-example',
+          "tasks.csv doesn't exist or invalid format"
+        );
+        mainWindow.webContents.send('ipc-example', error.message);
+      }
+      return;
+    }
+
     const client = new Client({
       // See other options here
       // https://discordjs-self-v13.netlify.app/#/docs/docs/main/typedef/ClientOptions
@@ -172,19 +185,6 @@ const createWindow = async () => {
         mainWindow.webContents.send('ipc-example', message.content);
       }
     });
-  }
-
-  mainWindow.loadURL(resolveHtmlPath('index.html'));
-
-  mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) {
-      throw new Error('"mainWindow" is not defined');
-    }
-    if (process.env.START_MINIMIZED) {
-      mainWindow.minimize();
-    } else {
-      mainWindow.show();
-    }
   });
 
   mainWindow.on('closed', () => {
