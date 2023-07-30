@@ -1,17 +1,31 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import { useState } from 'react';
+import icon from '../../assets/logo.png';
 
 function Terminal() {
-  const [messages, setMessages] = useState(['']);
+  const [messages, setMessages] = useState<string[]>(['']);
 
   // calling IPC exposed from preload script
   window.electron.ipcRenderer.on('ipc-example', (arg) => {
     // eslint-disable-next-line no-console
-    const date = new Date();
-    setMessages([...messages, `${date.toLocaleString()}\n${arg}\n`]);
+    setMessages([...messages, `${arg}\n`]);
   });
-  return <text>{messages.join('\n')}</text>;
+  const date = new Date();
+
+  return messages.map((message, index) =>
+    index === 0 ? (
+      <div />
+    ) : (
+      <>
+        <div className="profile other-profile">
+          <img alt="logo" src={icon} width="30" height="30" />
+          <span>{date.toLocaleString()}</span>
+        </div>
+        <p>{message}</p>
+      </>
+    )
+  );
 }
 
 export default function App() {
