@@ -99,13 +99,10 @@ const createWindow = async () => {
 
     let data: any;
     try {
-      console.log('auth start');
       data = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-      console.log('auth process');
       await AuthValidate(data.key);
     } catch (error: any) {
       if (mainWindow !== null) {
-        console.log(error.message);
         mainWindow.webContents.send(
           'ipc-example',
           "config.json doesn't exist or invalid key"
