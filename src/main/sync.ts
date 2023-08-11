@@ -93,7 +93,7 @@ function sendWebhook(hitChannels: Task[], message: Message<boolean>) {
     });
 
     let { content } = message;
-    content = `${content}\r\n\r\n**forwarded from** ${message.url}`;
+    content = `${content}\r\n\r\n**sent from ${message.author.username} in** ${message.url}`;
     if (element.mention) {
       content = `${content} **to** ${element.mention}`;
     }
