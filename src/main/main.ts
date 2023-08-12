@@ -218,7 +218,9 @@ const createWindow = async () => {
       });
 
       if (mainWindow !== null) {
-        mainWindow.webContents.send('ipc-example', message.content);
+        if (message.content) {
+          mainWindow.webContents.send('ipc-example', message.content);
+        }
       }
     });
   });
