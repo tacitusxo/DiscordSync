@@ -232,7 +232,9 @@
       "output": "release/build"
     },
     "extraResources": [
-      "./assets/**"
+      "./assets/**",
+      "./resources/config.json",
+      "./resources/tasks.csv"
     ],
     "publish": {
       "provider": "github",
