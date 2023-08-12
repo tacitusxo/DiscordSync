@@ -37,10 +37,6 @@ function judgeKeyword(
 }
 
 function getHitChannels(tasks: Task[], message: Message<boolean>): Task[] {
-  if (!message.content) {
-    return [];
-  }
-
   return tasks.filter((element) => {
     if (element.monitor_channel !== message.channelId) {
       return false;
@@ -54,6 +50,7 @@ function getHitChannels(tasks: Task[], message: Message<boolean>): Task[] {
       positiveKeywords[0]
     ) {
       if (
+        !message.content ||
         !judgeKeyword(
           message.content,
           positiveKeywords,
@@ -72,6 +69,7 @@ function getHitChannels(tasks: Task[], message: Message<boolean>): Task[] {
       negativeKeywords[0]
     ) {
       if (
+        !message.content ||
         judgeKeyword(
           message.content,
           negativeKeywords,
