@@ -1,7 +1,7 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import { useState } from 'react';
-import icon from '../../assets/logo.png';
+import icon from '../../assets/icon.png';
 
 function Terminal() {
   const [messages, setMessages] = useState<string[]>(['']);
