@@ -226,6 +226,9 @@ const createWindow = async () => {
           });
         }
       });
+      if (errorMessages.length > 0) {
+        return;
+      }
 
       if (mainWindow !== null) {
         if (message.content) {
