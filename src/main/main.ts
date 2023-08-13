@@ -160,12 +160,23 @@ const createWindow = async () => {
       return;
     }
 
-    const client = new Client({
-      // See other options here
-      // https://discordjs-self-v13.netlify.app/#/docs/docs/main/typedef/ClientOptions
-      // All partials are loaded automatically
-      checkUpdate: false,
-    });
+    let client: Client<boolean>;
+    if (data.proxy) {
+      client = new Client({
+        // See other options here
+        // https://discordjs-self-v13.netlify.app/#/docs/docs/main/typedef/ClientOptions
+        // All partials are loaded automatically
+        checkUpdate: false,
+        proxy: data.proxy,
+      });
+    } else {
+      client = new Client({
+        // See other options here
+        // https://discordjs-self-v13.netlify.app/#/docs/docs/main/typedef/ClientOptions
+        // All partials are loaded automatically
+        checkUpdate: false,
+      });
+    }
 
     client
       .login(data.token)
