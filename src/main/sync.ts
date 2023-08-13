@@ -1,5 +1,8 @@
-import { Message } from 'discord.js-selfbot-v13';
-import { WebhookClient } from 'discord.js';
+import {
+  HTTPAttachmentData,
+  Message,
+  WebhookClient,
+} from 'discord.js-selfbot-v13';
 import { Task } from './type';
 
 function judgeKeyword(
@@ -143,14 +146,17 @@ function sendWebhook(hitChannels: Task[], message: Message<boolean>): string[] {
       content = `${content}\r\n\r\n(${message.url})`;
     }
 
-    // const attachments: AttachmentBuilder[] = [];
+    const attachments: HTTPAttachmentData[] = [];
     message.attachments.forEach((attachment) => {
-      // const atc = new AttachmentBuilder(attachment.url);
+      // const atc = new HTTPAttachmentData(attachment.attachment, attachment.name);
       // if (attachment.name) {
       //   atc.setName(attachment.name);
       // }
-      // attachments.push(atc);
-      content += `\r\n${attachment.url}`;
+      attachments.push({
+        attachment: attachment.attachment,
+        name: attachment.name ? attachment.name : 'no-name',
+      } as HTTPAttachmentData);
+      // content += `\r\n${attachment.url}`;
     });
 
     let username: string;
@@ -177,7 +183,7 @@ function sendWebhook(hitChannels: Task[], message: Message<boolean>): string[] {
           username,
           // avatarURL,
           embeds: message.embeds,
-          // files: attachments,
+          files: attachments,
         })
         .catch((error) => {
           errorMessages.push(error.message);
@@ -189,7 +195,7 @@ function sendWebhook(hitChannels: Task[], message: Message<boolean>): string[] {
           username,
           avatarURL,
           embeds: message.embeds,
-          // files: attachments,
+          files: attachments,
         })
         .catch((error) => {
           errorMessages.push(error.message);
