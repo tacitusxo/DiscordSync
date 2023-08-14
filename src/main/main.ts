@@ -109,6 +109,12 @@ const createWindow = async () => {
     let data: any;
     try {
       data = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (!data.key) {
+        mainWindow.webContents.send('ipc-example', {
+          content: 'Read the documentation to get started.',
+        });
+        return;
+      }
       await AuthValidate(data.key);
     } catch (error: any) {
       mainWindow.webContents.send('ipc-example', {
