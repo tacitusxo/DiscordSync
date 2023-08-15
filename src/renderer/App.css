@@ -32,3 +32,14 @@ span{
   vertical-align: middle;
   border-radius: 50%;
 }
+
+.btn {
+  position: absolute; /* 今の位置を基準 */
+  bottom: 10px; /* 上から10px */
+  right: 20px; /* 左から20px */
+  background-color: whitesmoke;
+  border-radius: 0px;
+  border-width: 0px;
+  box-shadow: black 0px 0px 5px;
+  color: black;
+}

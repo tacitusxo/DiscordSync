@@ -1,6 +1,8 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFolder } from '@fortawesome/free-solid-svg-icons';
 import icon from '../../assets/icon.png';
 import discord from '../../assets/discord.png';
 import { IpcMessage } from './type';
@@ -60,6 +62,17 @@ function Terminal() {
       );
     }
   });
+
+  messageElemtnts.push(
+    <button
+      id="btn"
+      className="btn btn-three"
+      type="button"
+      onClick={() => window.electron.ipcRenderer.sendMessage('ipc-example')}
+    >
+      <FontAwesomeIcon icon={faFolder} size="2xl" />
+    </button>
+  );
 
   return messageElemtnts;
 }
