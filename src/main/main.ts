@@ -15,6 +15,7 @@ import log from 'electron-log';
 import { Client } from 'discord.js-selfbot-v13';
 import * as fs from 'fs';
 import { parse } from 'csv-parse/sync';
+import * as os from 'os';
 import { resolveHtmlPath } from './util';
 import { Task } from './type';
 import AuthValidate from './auth';
@@ -62,6 +63,41 @@ const installExtensions = async () => {
 };
 
 const createWindow = async () => {
+  const userDirectory = os.homedir();
+
+  const destinationDirectory = path.join(userDirectory, 'DiscordSync');
+  if (!fs.existsSync(destinationDirectory)) {
+    fs.mkdirSync(destinationDirectory);
+  }
+
+  const sourceFile = path.join(
+    process.resourcesPath,
+    'resources',
+    'config.json'
+  );
+  const destinationFile = path.join(destinationDirectory, 'config.json');
+  if (!fs.existsSync(destinationFile)) {
+    if (isDebug) {
+      fs.copyFileSync('config.json', destinationFile);
+    } else {
+      fs.copyFileSync(sourceFile, destinationFile);
+    }
+  }
+
+  const sourceTaskFile = path.join(
+    process.resourcesPath,
+    'resources',
+    'tasks.csv'
+  );
+  const destinationTaskFile = path.join(destinationDirectory, 'tasks.csv');
+  if (!fs.existsSync(destinationTaskFile)) {
+    if (isDebug) {
+      fs.copyFileSync('tasks.csv', destinationTaskFile);
+    } else {
+      fs.copyFileSync(sourceTaskFile, destinationTaskFile);
+    }
+  }
+
   if (isDebug) {
     await installExtensions();
   }
@@ -99,16 +135,9 @@ const createWindow = async () => {
       mainWindow.show();
     }
 
-    let configPath: string;
-    if (isDebug) {
-      configPath = 'config.json';
-    } else {
-      configPath = path.join(process.resourcesPath, 'resources', 'config.json');
-    }
-
     let data: any;
     try {
-      data = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      data = JSON.parse(fs.readFileSync(destinationFile, 'utf8'));
       if (!data.key) {
         mainWindow.webContents.send('ipc-example', {
           content: 'Read the documentation to get started.',
@@ -126,16 +155,9 @@ const createWindow = async () => {
       return;
     }
 
-    let tasksPath: string;
-    if (isDebug) {
-      tasksPath = 'tasks.csv';
-    } else {
-      tasksPath = path.join(process.resourcesPath, 'resources', 'tasks.csv');
-    }
-
     const tasks: Task[] = [];
     try {
-      const db = fs.readFileSync(tasksPath, 'utf8');
+      const db = fs.readFileSync(destinationTaskFile, 'utf8');
       const records = parse(db);
       records.forEach((record: any) => {
         if (record !== records[0]) {
