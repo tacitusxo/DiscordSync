@@ -1,0 +1,209 @@
+import {
+  HTTPAttachmentData,
+  Message,
+  WebhookClient,
+} from 'discord.js-selfbot-v13';
+import { Task } from './type';
+
+function judgeKeyword(
+  content: string,
+  keywords: string[],
+  keywordType: string
+): boolean {
+  let isHitKeyword = false;
+  let isNotHitKeyword = false;
+  keywords.forEach((keyword) => {
+    switch (keywordType) {
+      case `all`:
+        if (!content.toUpperCase().includes(keyword.toUpperCase())) {
+          isNotHitKeyword = true;
+          return;
+        }
+
+        if (keyword === keywords[keywords.length - 1] && !isNotHitKeyword) {
+          isHitKeyword = true;
+        }
+        break;
+
+      case `or`:
+        if (content.toUpperCase().includes(keyword.toUpperCase())) {
+          isHitKeyword = true;
+        }
+        break;
+
+      default:
+        throw new Error('invalid keywords_type');
+    }
+  });
+
+  return isHitKeyword;
+}
+
+function getHitChannels(tasks: Task[], message: Message<boolean>): Task[] {
+  return tasks.filter((element) => {
+    if (element.monitor_channel !== message.channelId) {
+      return false;
+    }
+
+    // ポジティブキーワードによる検索
+    const positiveKeywords = element.positive_keywords?.split('+');
+    if (
+      positiveKeywords &&
+      positiveKeywords.length !== 0 &&
+      positiveKeywords[0]
+    ) {
+      if (!message.content) {
+        return false;
+      }
+
+      if (
+        !judgeKeyword(
+          message.content,
+          positiveKeywords,
+          element.positive_keywords_type
+        )
+      ) {
+        const embedsList = message.embeds;
+        if (embedsList.length === 0) {
+          return false;
+        }
+
+        let result = false;
+        embedsList.forEach((embed) => {
+          if (
+            judgeKeyword(
+              JSON.stringify(embed),
+              positiveKeywords,
+              element.positive_keywords_type
+            )
+          ) {
+            result = true;
+          }
+        });
+        if (!result) {
+          return false;
+        }
+      }
+    }
+
+    // ネガティブキーワードによる検索
+    const negativeKeywords = element.negative_keywords?.split('+');
+    if (
+      negativeKeywords &&
+      negativeKeywords.length !== 0 &&
+      negativeKeywords[0]
+    ) {
+      if (!message.content) {
+        return false;
+      }
+
+      if (
+        judgeKeyword(
+          message.content,
+          negativeKeywords,
+          element.negative_keywords_type
+        )
+      ) {
+        const embedsList = message.embeds;
+        if (embedsList.length === 0) {
+          return false;
+        }
+
+        let result = false;
+        embedsList.forEach((embed) => {
+          if (
+            judgeKeyword(
+              JSON.stringify(embed),
+              negativeKeywords,
+              element.positive_keywords_type
+            )
+          ) {
+            result = true;
+          }
+        });
+        if (result) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  });
+}
+
+function sendWebhook(hitChannels: Task[], message: Message<boolean>): string[] {
+  const errorMessages: string[] = [];
+  hitChannels.forEach((element) => {
+    const webhookClient = new WebhookClient({
+      url: element.webhook_url,
+    });
+
+    let { content } = message;
+    if (element.webhook_mention) {
+      content = `${element.webhook_mention}\r\n${content}`;
+    }
+    if (element.webhook_reference_enabled === 'true') {
+      content = `${content}\r\n\r\n(${message.url})`;
+    }
+
+    const attachments: HTTPAttachmentData[] = [];
+    message.attachments.forEach((attachment) => {
+      // const atc = new HTTPAttachmentData(attachment.attachment, attachment.name);
+      // if (attachment.name) {
+      //   atc.setName(attachment.name);
+      // }
+      attachments.push({
+        attachment: attachment.attachment,
+        name: attachment.name ? attachment.name : 'no-name',
+      } as HTTPAttachmentData);
+      // content += `\r\n${attachment.url}`;
+    });
+
+    let username: string;
+    if (element.webhook_user_name) {
+      username = element.webhook_user_name;
+    } else {
+      username = message.author.displayName;
+    }
+
+    let avatarURL: string;
+    if (element.webhook_avatar_url) {
+      avatarURL = element.webhook_avatar_url;
+    } else if (message.author.avatarURL()) {
+      // @ts-ignore
+      avatarURL = message.author.avatarURL();
+    } else {
+      avatarURL = '';
+    }
+
+    if (avatarURL === '') {
+      webhookClient
+        .send({
+          content,
+          username,
+          // avatarURL,
+          embeds: message.embeds,
+          files: attachments,
+        })
+        .catch((error) => {
+          errorMessages.push(error.message);
+        });
+    } else {
+      webhookClient
+        .send({
+          content,
+          username,
+          avatarURL,
+          embeds: message.embeds,
+          files: attachments,
+        })
+        .catch((error) => {
+          errorMessages.push(error.message);
+        });
+    }
+  });
+
+  return errorMessages;
+}
+
+export { getHitChannels, sendWebhook };

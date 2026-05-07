@@ -1,0 +1,19 @@
+{
+  "name": "DiscordSync",
+  "version": "0.0.5",
+  "description": "Discord Management desktop apps",
+  "author": {
+    "name": "DiscordSync Developer",
+    "email": "discordsync302@gmail.com",
+    "url": "https://discordsync.webflow.io/"
+  },
+  "main": "./dist/main/main.js",
+  "scripts": {
+    "rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
+    "postinstall": "npm run rebuild && npm run link-modules",
+    "link-modules": "node -r ts-node/register ../../.erb/scripts/link-modules.ts"
+  },
+  "dependencies": {
+    "discord.js-selfbot-v13": "^2.14.9"
+  }
+}
